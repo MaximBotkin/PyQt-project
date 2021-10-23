@@ -1,2 +1,0 @@
-# PyQt-project
-PyQt project
