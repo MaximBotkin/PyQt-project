@@ -178,8 +178,7 @@ class Zero_error(Exception):
 
 # Класс чтения базы данных
 class Db_reader:
-    def __init__(self, dictionary_of_expense, cursor, user_id, con, name_of_file="transactions.csv"):
-        self.name_of_file = name_of_file
+    def __init__(self, dictionary_of_expense, cursor, user_id, con):
         self.dictionary_of_expense = dictionary_of_expense
         self.cursor = cursor
         self.user_id = user_id
