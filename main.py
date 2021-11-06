@@ -42,10 +42,11 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
         # Отображение сегодняшней даты
         self.spending_date.showToday()
 
-        # Чтение csv файла с помощью класса Csv_reader и вывод таблицы в TableWidget
+        # Чтение базы данных с помощью класса Db_reader и вывод таблицы в TableWidget
         csv_reader = Db_reader(self.dictionary_of_expense, self.cursor, self.user_id, self.con)
         csv_reader.read_transactions_table()
-        LoadTable.loadTable(self)
+        table_loader = LoadTable(self.dictionary_of_expense, self.transactions_table)
+        table_loader.loadTable()
 
         # Обработка нажатия остальных кнопок
         self.making_expense_btn.clicked.connect(self.expense_processing)
@@ -111,9 +112,10 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
             # Запись данных в базу данных с помощью класса Db_writer
             writer = Db_writer(date, sum_of_expense, self.dictionary_of_expense, expense_description, self.cursor,
                                self.user_id, self.con, time, method_of_payment)
-            writer.write_table()
+            self.dictionary_of_expense = writer.write_table()
             # Вывод таблицы
-            LoadTable.loadTable(self)
+            table_loader = LoadTable(self.dictionary_of_expense, self.transactions_table)
+            table_loader.loadTable()
         # В случае ошибки вылезает QMessageBox.critical с описанием
         except ValueError:
             QMessageBox.critical(self, 'Ошибка!', 'Вы ввели не число', QMessageBox.Ok)
@@ -137,9 +139,10 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
             # Запись данных в базу данных с помощью класса Db_writer
             writer = Db_writer(date, sum_of_income, self.dictionary_of_expense, income_description, self.cursor,
                                self.user_id, self.con)
-            writer.write_table()
+            self.dictionary_of_expense = writer.write_table()
             # Вывод таблицы
-            LoadTable.loadTable(self)
+            table_loader = LoadTable(self.dictionary_of_expense, self.transactions_table)
+            table_loader.loadTable()
         # В случае ошибки вылезает QMessageBox.critical с описанием
         except ValueError:
             QMessageBox.critical(self, 'Ошибка!', 'Вы ввели не число', QMessageBox.Ok)
@@ -199,13 +202,13 @@ class Db_reader:
 class Db_writer:
     # Передача всех данных в init
     def __init__(self, date, sum_of_expense, dictionary_of_expense, description,
-                 cursor, user_id, con, time=None, method_of_payment=''):
+                 cursor, user_id, con, time='', method_of_payment=''):
         self.date = date
         self.time = time
         self.sum_of_expense = sum_of_expense
         self.method_of_payment = method_of_payment
         self.description = description
-        self.dictionary_of_expense = dictionary_of_expense
+        self.dictionary = dictionary_of_expense
         self.cursor = cursor
         self.user_id = user_id
         self.con = con
@@ -213,36 +216,37 @@ class Db_writer:
     # Функция записи данных в базу данных
     def write_table(self):
         # Проверка первой строки таблицы
-        if len(self.dictionary_of_expense) == 1:
-            # Если она пустая, то создается новая таблица, удаляя эту строку
-            if self.dictionary_of_expense[0]['Дата и время(для расходов)'] == '':
-                self.dictionary_of_expense = []
+        if len(self.dictionary) == 1:
+            # Если она пустая, то создается новая таблица, удаляя эту строку и добавляя новую
+            if self.dictionary[0]['Дата и время(для расходов)'] == '':
+                self.dictionary = []
         # Проверка: если не передано время, значит это доход
         if self.time is None:
             # Добавление новой строки в таблицу в виде словаря
-            self.dictionary_of_expense.append({'Дата и время(для расходов)': self.date,
-                                               'Сумма': self.sum_of_expense,
-                                               'Метод оплаты(для расходов)': self.method_of_payment,
-                                               'Описание': self.description})
+            self.dictionary.append({'Дата и время(для расходов)': self.date,
+                                    'Сумма': self.sum_of_expense,
+                                    'Метод оплаты(для расходов)': self.method_of_payment,
+                                    'Описание': self.description})
             self.cursor.execute(f'INSERT INTO transactions VALUES ({self.user_id}, "{self.date} {self.time}",'
                                 f'{self.sum_of_expense}, "{self.method_of_payment}", "{self.description}")')
             self.con.commit()
         # Иначе - это расход
         else:
-            self.dictionary_of_expense.append({'Дата и время(для расходов)': f'{self.date} {self.time}',
-                                               'Сумма': self.sum_of_expense,
-                                               'Метод оплаты(для расходов)': self.method_of_payment,
-                                               'Описание': self.description})
             self.cursor.execute(f'INSERT INTO transactions VALUES ({self.user_id}, "{self.date} {self.time}",'
                                 f'{self.sum_of_expense}, "{self.method_of_payment}", "{self.description}")')
             self.con.commit()
+            self.dictionary.append({'Дата и время(для расходов)': f'{self.date} {self.time}',
+                                    'Сумма': self.sum_of_expense,
+                                    'Метод оплаты(для расходов)': self.method_of_payment,
+                                    'Описание': self.description})
+        return self.dictionary
 
 
 # Вывод таблицы
 class LoadTable:
-    def __init__(self, dictionary_of_expense):
-        self.transactions_table = None
+    def __init__(self, dictionary_of_expense, transactions_table):
         self.dictionary_of_expense = dictionary_of_expense
+        self.transactions_table = transactions_table
 
     def loadTable(self):
         reader = self.dictionary_of_expense
