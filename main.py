@@ -1,7 +1,9 @@
 import sqlite3
 import sys
+import os
 import PyQt5
 import PyQt5.QtWidgets as QtWidgets
+import xlsxwriter
 from PyQt5.QtWidgets import QApplication, QMessageBox, QTableWidgetItem
 from PyQt5 import uic
 from PyQt5.QtGui import QColor
@@ -52,6 +54,7 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
         self.making_expense_btn.clicked.connect(self.expense_processing)
         self.making_income_btn.clicked.connect(self.income_processing)
         self.clear_history_btn.clicked.connect(self.clear_history)
+        self.create_excel_btn.clicked.connect(self.create_excel)
 
     # Предупреждение перед закрытием программы
     def closeEvent(self, event):
@@ -173,6 +176,10 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
         # Вывод таблицы
         LoadTable.loadTable(self)
 
+    def create_excel(self):
+        excel_writer = Excel_writer(self.dictionary_of_expense)
+        excel_writer.write_table_xlsx()
+
 
 # Класс ошибки, если пользователь ввел число, меньшее или равное 0
 class Zero_error(Exception):
@@ -285,6 +292,65 @@ class LoadTable:
         header.setSectionResizeMode(2, QtWidgets.QHeaderView.Stretch)
         # В данном столбце размер регулируется по контенту
         header.setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeToContents)
+
+
+class Excel_writer(QtWidgets.QMainWindow):
+    def __init__(self, dictionary_of_expense):
+        # Передаем данные
+        super().__init__()
+        self.message = QtWidgets.QMessageBox()
+        self.dictionary_of_expense = dictionary_of_expense
+
+    def write_table_xlsx(self):
+        try:
+            # Создание excel файла transactions.xlsx
+            if os.path.exists('transactions.xlsx'):
+                # Проверка не существует ли такой файл
+                # Если существует спрашиваем пользователя: заменить ли его
+                reply = self.message.question(self, 'Замена файла',
+                                              'Файл с именем "transactions.xlsx" уже существует, заменить его?',
+                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                if reply == QMessageBox.Yes:
+                    path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'transactions.xlsx')
+                    os.remove(path)
+                else:
+                    return
+            workbook = xlsxwriter.Workbook('transactions.xlsx')
+            worksheet = workbook.add_worksheet()
+
+            # Формат жирности шрифта
+            bold = workbook.add_format({'bold': True})
+
+            # Написание заголовков
+            worksheet.write('A1', 'Дата и время(для расходов)', bold)
+            worksheet.write('B1', 'Сумма', bold)
+            worksheet.write('C1', 'Метод оплаты(для расходов)', bold)
+            worksheet.write('D1', 'Описание', bold)
+
+            # Запись данных в таблицу Excel
+            count = 1
+            for row in self.dictionary_of_expense:
+                count += 1
+                worksheet.write(f'A{count}', row["Дата и время(для расходов)"])
+                worksheet.write(f'B{count}', row["Сумма"])
+                worksheet.write(f'C{count}', row["Метод оплаты(для расходов)"])
+                worksheet.write(f'D{count}', row["Описание"])
+
+            # Установка ширины столбцов
+            worksheet.set_column('A:A', 35)
+            worksheet.set_column('B:B', 10)
+            worksheet.set_column('C:C', 28)
+            worksheet.set_column('D:D', 25)
+
+            # Сохраняем и закрываем
+            workbook.close()
+            self.message.information(self, 'Успех', 'Файл "transactions.xlsx" был успешно создан,'
+                                                    ' теперь вы можете найти его в папке с программой.')
+        # # В случае ошибки вылезает QMessageBox.critical с описанием
+        except Exception:
+            self.message.critical(self, 'Ошибка!',
+                                  'Программа не может получить доступ к файлу, так как он занят другим процессом.',
+                                  QMessageBox.Ok)
 
 
 # Окно входа в аккаунт
