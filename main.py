@@ -29,8 +29,8 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
         self.payment_method.addItem('наличные')
 
         # Отображение общей суммы расходов и доходов
-        self.expenses_sum.display(expenses_sum)
-        self.income_sum.display(income_sum)
+        self.expenses_sum.setText(str(expenses_sum)[:10])
+        self.income_sum.setText(str(income_sum)[:10])
 
         self.dictionary_of_expense = []
 
@@ -62,8 +62,8 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
             reply = QMessageBox.question(self, 'Выход из программы', 'Вы действительно хотите закрыть программу?',
                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes and self.closed is False:
-                expense_sum = self.expenses_sum.value()
-                income_sum = self.income_sum.value()
+                expense_sum = float(self.expenses_sum.text())
+                income_sum = float(self.income_sum.text())
                 # Сохраняем суммы расходов и доходов пользователя
                 self.cursor.execute(f'UPDATE user SET expense_sum = {expense_sum}, income_sum = {income_sum}'
                                     f' WHERE id = {self.user_id};')
@@ -82,8 +82,8 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
             self.closed = True
-            expense_sum = self.expenses_sum.value()
-            income_sum = self.income_sum.value()
+            expense_sum = float(self.expenses_sum.text())
+            income_sum = float(self.income_sum.text())
             # Сохраняем суммы расходов и доходов пользователя
             self.cursor.execute(f'UPDATE user SET expense_sum = {expense_sum}, income_sum = {income_sum}'
                                 f' WHERE id = {self.user_id};')
@@ -108,9 +108,9 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
             sum_of_expense = -float(sum_of_expense)
             if sum_of_expense >= 0:
                 raise Zero_error
-            value_of_expenses_sum = self.expenses_sum.value()
+            value_of_expenses_sum = float(self.expenses_sum.text())
             # Отображение общей суммы расходов на LCD Number
-            self.expenses_sum.display(value_of_expenses_sum - sum_of_expense)
+            self.expenses_sum.setText(str(value_of_expenses_sum - sum_of_expense)[:9])
             method_of_payment = self.payment_method.currentText()
             # Запись данных в базу данных с помощью класса Db_writer
             writer = Db_writer(date, sum_of_expense, self.dictionary_of_expense, expense_description, self.cursor,
@@ -136,9 +136,9 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
             sum_of_income = float(sum_of_income)
             if sum_of_income <= 0:
                 raise Zero_error
-            value_of_income_sum = self.income_sum.value()
+            value_of_income_sum = float(self.income_sum.text())
             # Отображение общей суммы доходов на LCD Number
-            self.income_sum.display(value_of_income_sum + sum_of_income)
+            self.income_sum.setText(str(value_of_income_sum + sum_of_income)[:9])
             # Запись данных в базу данных с помощью класса Db_writer
             writer = Db_writer(date, sum_of_income, self.dictionary_of_expense, income_description, self.cursor,
                                self.user_id, self.con)
@@ -161,8 +161,8 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
     # Обработка кнопки "Очистить историю"
     def clear_history(self):
         # Отображение 0 на общих суммах и расходов, и доходов
-        self.income_sum.display(0)
-        self.expenses_sum.display(0)
+        self.income_sum.setText(str(0))
+        self.expenses_sum.setText(str(0))
         # Удаление всех транзакций данного пользователя из базы данных
         self.cursor.execute(f'DELETE FROM transactions WHERE user_id = {self.user_id};')
         self.cursor.execute(f'UPDATE user SET expense_sum = 0, income_sum = 0'
