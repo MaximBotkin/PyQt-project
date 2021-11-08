@@ -30,23 +30,13 @@
      <attribute name="title">
       <string>Расходы</string>
      </attribute>
-     <widget class="QLCDNumber" name="expenses_sum">
-      <property name="geometry">
-       <rect>
-        <x>390</x>
-        <y>20</y>
-        <width>391</width>
-        <height>111</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QLabel" name="label">
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>10</y>
-        <width>371</width>
-        <height>61</height>
+        <y>30</y>
+        <width>370</width>
+        <height>60</height>
        </rect>
       </property>
       <property name="font">
@@ -244,28 +234,37 @@
        <string>Внести расход</string>
       </property>
      </widget>
+     <widget class="QLabel" name="expenses_sum">
+      <property name="geometry">
+       <rect>
+        <x>390</x>
+        <y>10</y>
+        <width>331</width>
+        <height>90</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Segoe UI Variable</family>
+        <pointsize>50</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>000000000</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="income">
      <attribute name="title">
       <string>Доходы</string>
      </attribute>
-     <widget class="QLCDNumber" name="income_sum">
-      <property name="geometry">
-       <rect>
-        <x>380</x>
-        <y>10</y>
-        <width>391</width>
-        <height>131</height>
-       </rect>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_3">
       <property name="geometry">
        <rect>
-        <x>20</x>
-        <y>0</y>
-        <width>361</width>
-        <height>81</height>
+        <x>10</x>
+        <y>30</y>
+        <width>370</width>
+        <height>60</height>
        </rect>
       </property>
       <property name="font">
@@ -397,6 +396,25 @@
        <string>Дата:</string>
       </property>
      </widget>
+     <widget class="QLabel" name="income_sum">
+      <property name="geometry">
+       <rect>
+        <x>380</x>
+        <y>10</y>
+        <width>321</width>
+        <height>90</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Segoe UI Variable</family>
+        <pointsize>50</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>0</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="transactions">
      <attribute name="title">
@@ -423,6 +441,19 @@
       </property>
       <property name="text">
        <string>Очистить историю</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="create_excel_btn">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>0</y>
+        <width>211</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Создать excel файл с данной таблицей</string>
       </property>
      </widget>
     </widget>
