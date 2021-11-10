@@ -65,8 +65,8 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
                 expense_sum = float(self.expenses_sum.text())
                 income_sum = float(self.income_sum.text())
                 # Сохраняем суммы расходов и доходов пользователя
-                self.cursor.execute(f'UPDATE user SET expense_sum = {expense_sum}, income_sum = {income_sum}'
-                                    f' WHERE id = {self.user_id};')
+                self.cursor.execute(f'UPDATE sums SET expense_sum = {expense_sum}, income_sum = {income_sum}'
+                                    f' WHERE user_id = {self.user_id};')
                 self.con.commit()
                 # Закрываем базу данных
                 self.con.close()
@@ -85,8 +85,8 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
             expense_sum = float(self.expenses_sum.text())
             income_sum = float(self.income_sum.text())
             # Сохраняем суммы расходов и доходов пользователя
-            self.cursor.execute(f'UPDATE user SET expense_sum = {expense_sum}, income_sum = {income_sum}'
-                                f' WHERE id = {self.user_id};')
+            self.cursor.execute(f'UPDATE sums SET expense_sum = {expense_sum}, income_sum = {income_sum}'
+                                f' WHERE user_id = {self.user_id};')
             self.con.commit()
             # Закрываем базу данных
             self.con.close()
@@ -165,8 +165,8 @@ class MyWidget(PyQt5.QtWidgets.QMainWindow):
         self.expenses_sum.setText(str(0))
         # Удаление всех транзакций данного пользователя из базы данных
         self.cursor.execute(f'DELETE FROM transactions WHERE user_id = {self.user_id};')
-        self.cursor.execute(f'UPDATE user SET expense_sum = 0, income_sum = 0'
-                            f' WHERE id = {self.user_id};')
+        self.cursor.execute(f'UPDATE sums SET expense_sum = 0, income_sum = 0'
+                            f' WHERE user_id = {self.user_id};')
         self.con.commit()
         # Создание пустой таблицы
         self.dictionary_of_expense = [{'Дата и время(для расходов)': '',
@@ -391,17 +391,15 @@ class Login_window(PyQt5.QtWidgets.QDialog):
             password = bytes(password, 'utf-8')
             hash_password = hashlib.sha1(password).hexdigest()
             # Ищем пользователя в таблице users в базе данных
-            result_of_execute = cursor.execute("SELECT login, password FROM user WHERE login = ? AND password = ?",
+            result_of_execute = cursor.execute('SELECT login, password FROM user WHERE login = ? AND password = ?',
                                                (login, hash_password))
             # Проверка - найден ли пользователь
             if result_of_execute.fetchall():
                 # Если да, открываем главное окно и передаем user_id в класс MyWidget
-                user_id = cursor.execute("SELECT id FROM user WHERE login = ? AND password = ?",
+                user_id = cursor.execute('SELECT id FROM user WHERE login = ? AND password = ?',
                                          (login, hash_password)).fetchall()
-                expense_sum = cursor.execute("SELECT expense_sum FROM user WHERE login = ? AND password = ?",
-                                             (login, hash_password)).fetchall()
-                income_sum = cursor.execute("SELECT income_sum FROM user WHERE login = ? AND password = ?",
-                                            (login, hash_password)).fetchall()
+                expense_sum = cursor.execute(f'SELECT expense_sum FROM sums WHERE user_id = {user_id[0][0]}').fetchall()
+                income_sum = cursor.execute(f'SELECT income_sum FROM sums WHERE user_id = {user_id[0][0]}').fetchall()
                 # Открываем главное окно и передаем user_id в класс MyWidget
                 self.openMyWidget(user_id[0][0], expense_sum[0][0], income_sum[0][0])
             else:
@@ -436,12 +434,11 @@ class Login_window(PyQt5.QtWidgets.QDialog):
                 con.commit()
                 user_id = cursor.execute("SELECT id FROM user WHERE login = ? AND password = ?",
                                          (login, hash_password)).fetchall()
-                expense_sum = cursor.execute("SELECT expense_sum FROM user WHERE login = ? AND password = ?",
-                                             (login, hash_password)).fetchall()
-                income_sum = cursor.execute("SELECT income_sum FROM user WHERE login = ? AND password = ?",
-                                            (login, hash_password)).fetchall()
+                cursor.execute(f'INSERT INTO sums(user_id) VALUES({user_id[0][0]})')
                 # Открываем главное окно и передаем user_id в класс MyWidget
-                self.openMyWidget(user_id[0][0], expense_sum[0][0], income_sum[0][0])
+                # Сохраняем таблицу
+                con.commit()
+                self.openMyWidget(user_id[0][0], 0, 0)
 
 
 # Запуск программы
